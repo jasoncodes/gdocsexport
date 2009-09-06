@@ -1,0 +1,11 @@
+authentication:
+  username: example@gmail.com
+  password: opensesame
+export:
+  #folders: ['Important']
+  dest: ~/Documents/
+  formats:
+    document: ['doc', 'zip'] # doc,html,odt,pdf,png,rtf,txt,zip
+    spreadsheet: xls # csv,html,ods,pdf,tsv,xls
+    presentation: ppt # pdf,png,ppt,swf,txt
+    pdf: pdf # pdf

@@ -1,0 +1,188 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH << File.dirname(__FILE__)+'/lib'
+require 'rubygems'
+require 'gdata'
+require 'gdoc'
+require 'yaml'
+require 'tmail'
+require 'cgi'
+require 'fileutils'
+
+@config = YAML::load_file('config.yml')
+
+GDATA_SOURCE ='jasonw-gdocsexport'
+
+DOCLIST_SCOPE = 'http://docs.google.com/feeds/'
+DOCLIST_DOWNLOD_SCOPE = 'http://docs.googleusercontent.com/'
+CONTACTS_SCOPE = 'http://www.google.com/m8/feeds/'
+SPREADSHEETS_SCOPE = 'http://spreadsheets.google.com/feeds/'
+
+DOCLIST_FEED = DOCLIST_SCOPE + 'default/private/full'
+
+DOCUMENT_DOC_TYPE = 'document'
+FOLDER_DOC_TYPE = 'folder'
+PRESO_DOC_TYPE = 'presentation'
+PDF_DOC_TYPE = 'pdf'
+SPREADSHEET_DOC_TYPE = 'spreadsheet'
+MINE_LABEL = 'mine'
+STARRED_LABEL = 'starred'
+TRASHED_LABEL = 'trashed'
+
+@clients = Hash::new
+
+def client(type)
+  if @clients[type].nil?
+    @clients[type] = case
+    when type == :doclist
+      GData::Client::DocList.new(:version => '3.0', :source => GDATA_SOURCE)
+    when type == :spreadsheets
+      GData::Client::Spreadsheets.new(:source => GDATA_SOURCE)
+    else
+      raise 'Unsupported GData client type: ' + type
+    end
+    @clients[type].clientlogin(
+      @config['authentication']['username'],
+      @config['authentication']['password'])
+  end
+  return @clients[type]
+end
+
+def create_doc(entry)
+  resource_id = entry.elements['gd:resourceId'].text.split(':')
+  doc = GDoc::Document.new(entry.elements['title'].text,
+                           :type => resource_id[0],
+                           :xml => entry.to_s)
+
+  doc.doc_id = resource_id[1]
+  doc.last_updated = DateTime.parse(entry.elements['updated'].text)
+  if !entry.elements['gd:lastViewed'].nil?
+    doc.last_viewed = DateTime.parse(entry.elements['gd:lastViewed'].text)
+  end
+  if !entry.elements['gd:lastModifiedBy/email'].nil?
+     doc.last_modified_by = entry.elements['gd:lastModifiedBy/email'].text
+  end
+  doc.writers_can_invite = entry.elements['docs:writersCanInvite'].attributes['value']
+  doc.author = entry.elements['author/email'].text
+
+  entry.elements.each('link') do |link|
+    doc.links[link.attributes['rel']] = link.attributes['href']
+  end
+  doc.links['acl_feedlink'] = entry.elements['gd:feedLink'].attributes['href']
+  doc.links['content_src'] = entry.elements['content'].attributes['src']
+
+  case doc.type
+    when DOCUMENT_DOC_TYPE, PRESO_DOC_TYPE
+      doc.links['export'] = DOCLIST_SCOPE +
+                            "download/documents/Export?docID=#{doc.doc_id}"
+    when SPREADSHEET_DOC_TYPE
+      doc.links['export'] = SPREADSHEETS_SCOPE +
+                            "download/spreadsheets/Export?key=#{doc.doc_id}"
+    when PDF_DOC_TYPE
+      doc.links['export'] = doc.links['content_src']
+  end
+
+  entry.elements.each('gd:feedLink/feed/entry') do |feedlink_entry|
+    email = feedlink_entry.elements['gAcl:scope'].attributes['value']
+    role = feedlink_entry.elements['gAcl:role'].attributes['value']
+    doc.add_permission(email, role)
+  end
+  return doc
+end
+
+def create_docs(feed)
+  documents = []
+  feed.elements.each('entry') do |entry|
+    doc = create_doc(entry)
+    documents.push(doc) if !doc.nil?
+  end
+  return documents
+end
+
+def get_documents_for(options={})
+  uri = DOCLIST_FEED + "/-/#{options[:category].join('/')}"
+  uri += "?#{options[:params]}" if options[:params]
+  feed = client(:doclist).get(uri).to_xml
+  return create_docs(feed)
+end
+
+@docs_to_backup = Hash.new
+
+def add_docs_to_selection(docs)
+  docs.each do |doc|
+    if doc.type == 'folder'
+      add_folder_to_selection doc
+    else
+      @docs_to_backup[doc.doc_id] = doc
+    end
+  end
+end
+
+def add_folder_to_selection(folder)
+  add_docs_to_selection create_docs(client(:doclist).get(folder.links['content_src']).to_xml)
+end
+
+if @config['export']['folders'].nil? or @config['export']['folders'].empty?
+  add_docs_to_selection get_documents_for(:category=>['-'])
+else
+  folders = get_documents_for(:category => [FOLDER_DOC_TYPE], :params=>'showfolders=true')
+  folders.each do |folder|
+    if @config['export']['folders'].include? folder.title
+      add_folder_to_selection folder
+    end
+  end
+end
+
+@filenames = []
+
+@docs_to_backup.each do |doc_id,doc|
+  
+  formats = @config['export']['formats'][doc.type]
+  export_urls = Hash.new
+  if formats.nil?
+    export_urls['default'] = doc.links['export']
+  else
+    [formats].flatten.each do |format|
+      export_urls[format] = doc.links['export'] + '&exportFormat=' + format
+    end
+  end
+  
+  export_urls.each do |format,url|
+    
+    display_type = doc.type + (['default', doc.type].include?(format) ? '': '/'+format)
+    print "Downloading \"#{doc.title}\" (#{display_type})... "
+    STDOUT.flush
+    
+    uri = URI::parse(url)
+    client_type = case
+    when uri.host == 'spreadsheets.google.com'
+      :spreadsheets
+    else
+      :doclist
+    end
+    
+    resp = client(client_type).get(url)
+    
+    msg = TMail::Mail::new
+    resp.headers.each do |k,v|
+      msg[k] = v
+    end
+    filename = CGI::unescape(msg.disposition_param('filename'))
+    
+    if @filenames.include? filename
+      raise 'Duplicate filename: ' + filename
+    end
+    @filenames << filename
+    
+    dest = File.expand_path @config['export']['dest']
+    FileUtils.mkdir_p dest
+    path = File.join dest, filename
+    
+    File.open(path, 'w') do |f|
+      f.write(resp.body)
+    end
+    puts path
+    
+  end
+  
+end
