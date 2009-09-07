@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
-$LOAD_PATH << File.dirname(__FILE__)+'/lib'
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+
 require 'rubygems'
 require 'gdata'
 require 'gdoc'
