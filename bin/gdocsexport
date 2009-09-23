@@ -176,7 +176,8 @@ end
     end
     @filenames << filename
     
-    dest = File.expand_path @config['export']['dest']
+    dest = @config['export']['dest'] || '.'
+    dest = File.expand_path dest
     FileUtils.mkdir_p dest
     path = File.join dest, filename
     
