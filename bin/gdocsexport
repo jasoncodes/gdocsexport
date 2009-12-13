@@ -51,6 +51,10 @@ def client(type)
 end
 
 def create_doc(entry)
+  
+  # skip non-content entries such as Chrome bookmarks.
+  return nil unless entry.elements['content']
+  
   resource_id = entry.elements['gd:resourceId'].text.split(':')
   doc = GDoc::Document.new(entry.elements['title'].text,
                            :type => resource_id[0],
