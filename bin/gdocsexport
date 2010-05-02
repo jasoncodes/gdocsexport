@@ -191,11 +191,10 @@ documents.rescue_each_with_index :stderr => true do |(id,entry),idx|
     
     display_type = doc.type + (['default', doc.type].include?(format) ? '': '/'+format)
     
-    ext = display_type =~ /([^\/]+)$/ && ".#{$1}" || ''
-    filename = if base_path.downcase.end_with? ext
+    filename = if base_path.downcase.end_with? ".#{format}"
       base_path
     else
-      "#{base_path}#{ext}"
+      "#{base_path}.#{format}"
     end
     
     if @filenames.include? filename.downcase
