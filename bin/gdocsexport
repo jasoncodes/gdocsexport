@@ -8,6 +8,7 @@ require 'gdata'
 require 'gdoc'
 require 'yaml'
 require 'fileutils'
+require 'rescue_each'
 
 @config = YAML::load_file('config.yml')
 
@@ -167,7 +168,7 @@ end
 documents = documents.select { |id,doc| doc[:include] }
 @filenames = []
 
-documents.each_with_index do |(id,entry),idx|
+documents.rescue_each_with_index :stderr => true do |(id,entry),idx|
   doc = entry[:item]
   folder = folders[entry[:parent_id]]
   
