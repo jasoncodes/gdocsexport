@@ -187,7 +187,7 @@ documents.rescue_each_with_index :stderr => true do |(id,entry),idx|
     end
   end
   
-  export_urls.each do |format,url|
+  export_urls.rescue_each do |format,url|
     
     display_type = doc.type + (['default', doc.type].include?(format) ? '': '/'+format)
     
