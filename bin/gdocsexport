@@ -216,7 +216,7 @@ documents.rescue_each_with_index :stderr => true do |(id,entry),idx|
     
     if !local_timestamp.nil?
       if local_timestamp.to_i == remote_timestamp.to_i
-        puts "not updated."
+        puts "no changes."
         STDOUT.flush
         next
       end
