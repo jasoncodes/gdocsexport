@@ -60,9 +60,9 @@ def create_doc(entry)
                            :xml => entry.to_s)
 
   doc.doc_id = resource_id[1]
-  doc.last_updated = DateTime.parse(entry.elements['updated'].text)
+  doc.last_updated = Time.parse(entry.elements['updated'].text)
   if !entry.elements['gd:lastViewed'].nil?
-    doc.last_viewed = DateTime.parse(entry.elements['gd:lastViewed'].text)
+    doc.last_viewed = Time.parse(entry.elements['gd:lastViewed'].text)
   end
   if !entry.elements['gd:lastModifiedBy/email'].nil?
      doc.last_modified_by = entry.elements['gd:lastModifiedBy/email'].text
