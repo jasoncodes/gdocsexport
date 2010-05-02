@@ -211,6 +211,22 @@ documents.rescue_each_with_index :stderr => true do |(id,entry),idx|
     print "#{idx+1}/#{documents.size}: \"#{filename}\" (#{display_type})... "
     STDOUT.flush
     
+    remote_timestamp = doc.last_updated.utc
+    local_timestamp = File.exists?(path) ? File.mtime(path).utc : nil
+    
+    if !local_timestamp.nil?
+      if local_timestamp.to_i == remote_timestamp.to_i
+        puts "not updated."
+        STDOUT.flush
+        next
+      end
+      if local_timestamp.to_i > remote_timestamp.to_i
+        puts "local is newer than remote!"
+        STDOUT.flush
+        raise "local is newer than remote!"
+      end
+    end
+    
     uri = URI::parse(url)
     client_type = case
     when uri.host == 'spreadsheets.google.com'
@@ -231,6 +247,7 @@ documents.rescue_each_with_index :stderr => true do |(id,entry),idx|
     File.open(path, 'w') do |f|
       f.write(resp.body)
     end
+    File.utime Time.now.utc, remote_timestamp, path
     puts "#{resp.body.size} bytes."
     STDOUT.flush
     
