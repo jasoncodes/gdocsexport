@@ -164,9 +164,10 @@ documents.each do |id,doc|
 end
 
 
+documents = documents.select { |id,doc| doc[:include] }
 @filenames = []
 
-documents.select { |id,doc| doc[:include] }.each do |id,entry|
+documents.each_with_index do |(id,entry),idx|
   doc = entry[:item]
   folder = folders[entry[:parent_id]]
   
@@ -196,7 +197,7 @@ documents.select { |id,doc| doc[:include] }.each do |id,entry|
       "#{base_path}#{ext}"
     end
     
-    print "\"#{filename}\" (#{display_type})... "
+    print "#{idx+1}/#{documents.size}: \"#{filename}\" (#{display_type})... "
     STDOUT.flush
     
     uri = URI::parse(url)
@@ -230,6 +231,7 @@ documents.select { |id,doc| doc[:include] }.each do |id,entry|
       f.write(resp.body)
     end
     puts "#{resp.body.size} bytes."
+    STDOUT.flush
     
   end
   
