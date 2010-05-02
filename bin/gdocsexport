@@ -209,8 +209,9 @@ documents.select { |id,doc| doc[:include] }.each do |id,entry|
     
     begin
       resp = client(client_type).get(url)
-    rescue
-      puts 'retrying ...'
+    rescue Timeout::Error
+      print 'retrying... '
+      STDOUT.flush
       sleep 5
       resp = client(client_type).get(url)
     end
