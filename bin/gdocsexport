@@ -180,7 +180,7 @@ documents.rescue_each_with_index :stderr => true do |(id,entry),idx|
   formats = @config['export']['formats'][doc.type]
   export_urls = Hash.new
   if formats.nil?
-    export_urls['default'] = doc.links['export']
+    export_urls['default'] = doc.links['export'] || doc.links['content_src']
   else
     [formats].flatten.each do |format|
       export_urls[format] = doc.links['export'] + '&exportFormat=' + format
@@ -191,7 +191,7 @@ documents.rescue_each_with_index :stderr => true do |(id,entry),idx|
     
     display_type = doc.type + (['default', doc.type].include?(format) ? '': '/'+format)
     
-    filename = if base_path.downcase.end_with? ".#{format}"
+    filename = if format == 'default' || base_path.downcase.end_with?(".#{format}")
       base_path
     else
       "#{base_path}.#{format}"
