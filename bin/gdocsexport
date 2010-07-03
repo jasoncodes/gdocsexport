@@ -180,10 +180,10 @@ documents.rescue_each_with_index :stderr => true do |(id,entry),idx|
   formats = @config['export']['formats'][doc.type]
   export_urls = Hash.new
   if formats.nil?
-    export_urls['default'] = doc.links['export'] || doc.links['content_src']
+    export_urls['default'] = doc.links['content_src']
   else
     [formats].flatten.each do |format|
-      export_urls[format] = doc.links['export'] + '&exportFormat=' + format
+      export_urls[format] = "#{doc.links['content_src']}&exportFormat=#{format}&format=#{format}"
     end
   end
   
