@@ -1,0 +1,16 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    activesupport (3.0.3)
+    gdata_19 (1.1.2)
+    i18n (0.4.2)
+    rescue_each (1.1.4)
+      activesupport
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  gdata_19
+  i18n
+  rescue_each

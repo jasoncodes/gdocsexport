@@ -1,14 +1,16 @@
 #!/usr/bin/env ruby
 
 require 'pathname'
-$:.unshift Pathname.new(__FILE__).realpath.dirname.parent + 'lib'
+ENV['BUNDLE_GEMFILE'] ||= (Pathname.new(__FILE__).realpath.dirname.parent + 'Gemfile').to_s
+$:.unshift((Pathname.new(__FILE__).realpath.dirname.parent + 'lib').to_s)
 
 require 'rubygems'
-require 'gdata'
+require 'bundler'
+Bundler.require
+
 require 'gdoc'
 require 'yaml'
 require 'fileutils'
-require 'rescue_each'
 
 @config = YAML::load_file('config.yml')
 
