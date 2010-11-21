@@ -129,8 +129,8 @@ end
 
 def clean_name(name)
   name = name.dup
-  name.gsub! /^\.+/, ''
-  name.gsub! /[\/\\:]/, '-'
+  name.gsub!(/^\.+/, '')
+  name.gsub!(/[\/\\:]/, '-')
   name
 end
 
