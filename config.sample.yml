@@ -2,10 +2,10 @@ authentication:
   username: example@gmail.com
   password: opensesame
 export:
-  #folders: ['Important']
+  # folders: ['Important']
   dest: ~/Documents/
   formats:
-    document: ['doc', 'zip'] # doc,html,odt,pdf,png,rtf,txt,zip
+    document: [doc, zip] # doc,html,odt,pdf,png,rtf,txt,zip
     spreadsheet: xls # csv,html,ods,pdf,tsv,xls
     drawing: [png, svg, pdf] # png,jpeg,svg,pdf
     presentation: [ppt, pdf] # pdf,png,ppt,swf,txt
