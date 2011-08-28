@@ -219,7 +219,7 @@ documents.rescue_each_with_index :stderr => true do |(id,entry),idx|
     
     uri = URI::parse(url)
     client_type = case
-    when uri.host == 'spreadsheets.google.com'
+    when uri.host == 'spreadsheets.google.com' || uri.path =~ %r{/spreadsheets/}
       :spreadsheets
     else
       :doclist
