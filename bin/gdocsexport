@@ -36,13 +36,13 @@ TRASHED_LABEL = 'trashed'
 
 def client(type)
   if @clients[type].nil?
-    @clients[type] = case
-    when type == :doclist
+    @clients[type] = case type
+    when :doclist
       GData::Client::DocList.new(:version => '3.0', :source => GDATA_SOURCE)
-    when type == :spreadsheets
+    when :spreadsheets
       GData::Client::Spreadsheets.new(:source => GDATA_SOURCE)
     else
-      raise 'Unsupported GData client type: ' + type
+      raise "Unsupported GData client type: #{type}"
     end
     @clients[type].clientlogin(
       @config['authentication']['username'],
