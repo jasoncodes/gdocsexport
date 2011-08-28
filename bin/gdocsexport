@@ -78,17 +78,6 @@ def create_doc(entry)
   doc.links['acl_feedlink'] = entry.elements['gd:feedLink'].attributes['href']
   doc.links['content_src'] = entry.elements['content'].attributes['src']
 
-  case doc.type
-    when DOCUMENT_DOC_TYPE, PRESO_DOC_TYPE
-      doc.links['export'] = DOCLIST_SCOPE +
-                            "download/documents/Export?docID=#{doc.doc_id}"
-    when SPREADSHEET_DOC_TYPE
-      doc.links['export'] = SPREADSHEETS_SCOPE +
-                            "download/spreadsheets/Export?key=#{doc.doc_id}"
-    when PDF_DOC_TYPE
-      doc.links['export'] = doc.links['content_src']
-  end
-
   entry.elements.each('gd:feedLink/feed/entry') do |feedlink_entry|
     email = feedlink_entry.elements['gAcl:scope'].attributes['value']
     role = feedlink_entry.elements['gAcl:role'].attributes['value']
