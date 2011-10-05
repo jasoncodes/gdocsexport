@@ -16,10 +16,10 @@ require 'fileutils'
 
 GDATA_SOURCE ='jasonw-gdocsexport'
 
-DOCLIST_SCOPE = 'http://docs.google.com/feeds/'
-DOCLIST_DOWNLOD_SCOPE = 'http://docs.googleusercontent.com/'
-CONTACTS_SCOPE = 'http://www.google.com/m8/feeds/'
-SPREADSHEETS_SCOPE = 'http://spreadsheets.google.com/feeds/'
+DOCLIST_SCOPE = 'https://docs.google.com/feeds/'
+DOCLIST_DOWNLOD_SCOPE = 'https://docs.googleusercontent.com/'
+CONTACTS_SCOPE = 'https://www.google.com/m8/feeds/'
+SPREADSHEETS_SCOPE = 'https://spreadsheets.google.com/feeds/'
 
 DOCLIST_FEED = DOCLIST_SCOPE + 'default/private/full'
 
@@ -107,7 +107,7 @@ def docs_to_hash(docs)
   docs.each do |item|
     parent_link = item.links['http://schemas.google.com/docs/2007#parent']
     parent_id = if parent_link
-      parent_link =~ /\Ahttp:\/\/docs.google.com\/feeds\/default\/private\/full\/folder%3A(.+)/
+      parent_link =~ /\Ahttps:\/\/docs.google.com\/feeds\/default\/private\/full\/folder%3A(.+)/
       raise "Bad parent link: #{parent_link.inspect}" unless $1
       $1
     else
